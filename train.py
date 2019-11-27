@@ -15,10 +15,10 @@ try:  # Mixed precision training https://github.com/NVIDIA/apex
 except:
     mixed_precision = False  # not installed
 
-wdir = 'weights' + os.sep  # weights dir
+wdir = os.path.join(os.environ['SM_MODEL_DIR'], 'weights' + os.sep) # weights dir
+results_file = os.path.join(os.environ['SM_MODEL_DIR'], 'results.txt')
 last = wdir + 'last.pt'
 best = wdir + 'best.pt'
-results_file = 'results.txt'
 
 # Hyperparameters (k-series, 57.7 mAP yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 hyp = {'giou': 3.31,  # giou loss gain
@@ -185,6 +185,7 @@ def train():
         model.yolo_layers = model.module.yolo_layers  # move yolo layer indices to top level
 
     # Dataset
+    # TODO (sno6): Possibly have to edit this to pull from S3?
     dataset = LoadImagesAndLabels(train_path,
                                   img_size,
                                   batch_size,
@@ -369,7 +370,7 @@ def train():
     # end training
     if len(opt.name) and not opt.prebias:
         fresults, flast, fbest = 'results%s.txt' % opt.name, 'last%s.pt' % opt.name, 'best%s.pt' % opt.name
-        os.rename('results.txt', fresults)
+        os.rename(results_file, os.path.join(os.environ['SM_MODEL_DIR'], fresults))
         os.rename(wdir + 'last.pt', wdir + flast) if os.path.exists(wdir + 'last.pt') else None
         os.rename(wdir + 'best.pt', wdir + fbest) if os.path.exists(wdir + 'best.pt') else None
 
@@ -424,6 +425,13 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
+
+    # Custom parameters for Amazon Sagemaker.
+    parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR']) # Extra data output.
+    parser.add_argument('--model-dir', type=str, default=os.environ['SM_MODEL_DIR']) # Results output.
+    parser.add_argument('--train', type=str, default=os.environ['SM_CHANNEL_TRAIN'])
+    parser.add_argument('--test', type=str, default=os.environ['SM_CHANNEL_TEST'])
+
     opt = parser.parse_args()
     opt.weights = last if opt.resume else opt.weights
     print(opt)
