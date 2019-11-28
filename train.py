@@ -1,3 +1,4 @@
+import os
 import argparse
 
 import torch.distributed as dist
@@ -19,6 +20,11 @@ wdir = os.path.join(os.environ['SM_MODEL_DIR'], 'weights' + os.sep) # weights di
 results_file = os.path.join(os.environ['SM_MODEL_DIR'], 'results.txt')
 last = wdir + 'last.pt'
 best = wdir + 'best.pt'
+
+# Create weights folder if it doesn't already exist.
+if not os.path.exists(wdir):
+    os.makedirs(wdir)
+    print("Weight directory created:", wdir)
 
 # Hyperparameters (k-series, 57.7 mAP yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 hyp = {'giou': 3.31,  # giou loss gain
