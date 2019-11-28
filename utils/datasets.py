@@ -262,6 +262,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             self.img_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in img_formats]
 
+        print("path", path)
+        print(self.img_files)
+
         n = len(self.img_files)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
         nb = bi[-1] + 1  # number of batches
@@ -764,7 +767,7 @@ def cutout(image, labels):
 
     return labels
 
-
+#??
 def reduce_img_size(path='../data/sm4/images', img_size=1024):  # from utils.datasets import *; reduce_img_size()
     # creates a new ./images_reduced folder with reduced size images of maximum size img_size
     path_new = path + '_reduced'  # reduced images path
